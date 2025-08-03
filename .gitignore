@@ -1,0 +1,46 @@
+# Large data files
+data/raw/*.csv
+data/raw/*.json
+data/raw/*.xlsx
+data/raw/*.parquet
+
+# Keep processed data but exclude if too large
+# data/processed/*.csv
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+property_analysis_env/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Outputs that might be large
+outputs/charts/*.png
+outputs/charts/*.jpg
+outputs/charts/*.pdf
+outputs/reports/*.pdf
+
+# Temporary files
+*.tmp
+*.log
