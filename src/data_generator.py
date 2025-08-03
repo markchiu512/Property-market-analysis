@@ -57,7 +57,11 @@ def generate_property_data():
     columns = ['Price', 'Date', 'Postcode', 'Property Type', 'New built indicator', 'Tenure Type']
     df = pd.DataFrame(properties, columns=columns)
 
-    df.to_csv('../data/processed/property_data.csv', index=False)
+    import os
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(script_dir)
+    csv_path = os.path.join(project_root, 'data', 'processed', 'property_data.csv')
+    df.to_csv(csv_path, index=False)
     print(f"Generated {len(df)} properties and saved to property_data.csv")
     print("\nSample data:")
     print(df.head())

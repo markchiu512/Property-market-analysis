@@ -7,18 +7,18 @@ def _calculate_city_average_prices(df):
     return average_prices
 
 
-def most_affordable_cities(average_prices):
-    cheapest_city_avg = _calculate_city_average_prices(average_prices)
+def most_affordable_cities(df):
+    cheapest_city_avg = _calculate_city_average_prices(df)
     cheapest_city = cheapest_city_avg.idxmin()
     cheapest_price = cheapest_city_avg[cheapest_city]
     print(f" Most affordable city: {cheapest_city} £{cheapest_price:,.0f}")
     return 
 
-def highest_value_cities(average_prices):
-    highest_city_avg = _calculate_city_average_prices(average_prices)
+def highest_value_cities(df):
+    highest_city_avg = _calculate_city_average_prices(df)
     highest_city = highest_city_avg.idxmax()
     highest_price = highest_city_avg[highest_city]
-    print(f" Higheset_value_city: {highest_city} £{highest_price:,.0f}")
+    print(f" Highest value city: {highest_city} £{highest_price:,.0f}")
     return 
 
 def city_inventory_analysis(df):

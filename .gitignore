@@ -44,3 +44,6 @@ outputs/reports/*.pdf
 # Temporary files
 *.tmp
 *.log
+
+# Local scripts
+activate.sh
