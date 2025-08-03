@@ -60,9 +60,9 @@ def generate_property_data():
     import os
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(script_dir)
-    csv_path = os.path.join(project_root, 'data', 'processed', 'property_data.csv')
+    csv_path = os.path.join(project_root, 'data', 'processed', 'property_data_synthetic.csv')
     df.to_csv(csv_path, index=False)
-    print(f"Generated {len(df)} properties and saved to property_data.csv")
+    print(f"Generated {len(df)} synthetic properties and saved to property_data_synthetic.csv")
     print("\nSample data:")
     print(df.head())
 

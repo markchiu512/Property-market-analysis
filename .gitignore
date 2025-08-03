@@ -4,8 +4,12 @@ data/raw/*.json
 data/raw/*.xlsx
 data/raw/*.parquet
 
-# Keep processed data but exclude if too large
-# data/processed/*.csv
+# Large processed files (real data)
+data/processed/property_data_real.csv
+
+# Keep synthetic data and samples (small files)
+!data/processed/property_data_synthetic.csv
+!data/samples/*.csv
 
 # Python
 __pycache__/
