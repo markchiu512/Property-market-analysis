@@ -4,7 +4,7 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from data_cleaning import load_data
-from analysis import most_affordable_cities, highest_value_cities, city_inventory_analysis
+from analysis import *
 
 def main():
     import sys
@@ -31,6 +31,7 @@ def main():
         most_affordable_cities(df)
         highest_value_cities(df)
         city_inventory_analysis(df)
+        price_comparison_by_new_built_status(df)
     except FileNotFoundError as e:
         print(f" Error: {e}")
         print(" Use the helper scripts:")

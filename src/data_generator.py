@@ -56,6 +56,15 @@ def generate_property_data():
         
     columns = ['Price', 'Date', 'Postcode', 'Property Type', 'New built indicator', 'Tenure Type']
     df = pd.DataFrame(properties, columns=columns)
+    
+    # Create Postcode_Area column (same logic as real data cleaning)
+    df['Postcode_Area'] = np.where(
+        df['Postcode'].str[1].str.isdigit(),  
+        df['Postcode'].str[0],               
+        df['Postcode'].str[:2])
+    
+    # Reorder columns to match real data
+    df = df[['Price', 'Date', 'Postcode', 'Property Type', 'New built indicator', 'Tenure Type', 'Postcode_Area']]
 
     import os
     script_dir = os.path.dirname(os.path.abspath(__file__))
