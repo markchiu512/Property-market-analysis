@@ -13,7 +13,6 @@
 
   Step 2: Load Data
   - Calls load_data(dataset) function from data_cleaning.py
-  - This function looks for the right CSV file based on what you chose:
     - auto: Tries real data first, falls back to synthetic if not found
     - real: Looks for property_data_real.csv (820K records)
     - synthetic: Looks for property_data_synthetic.csv (1K records)
