@@ -3,90 +3,85 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def _calculate_city_average_prices(df):
-    # Use City column if available, otherwise fall back to Postcode_Area
-    if 'City' in df.columns:
-        average_prices = df.groupby('City')['Price'].mean()
-    else:
-        average_prices = df.groupby('Postcode_Area')['Price'].mean()
+    # Always group by Postcode_Area for consistent geographic analysis
+    average_prices = df.groupby('Postcode_Area')['Price'].mean()
     return average_prices
 
-def _get_postcode_for_city(df, city_name):
-    """Get the postcode area for a given city name"""
+def _get_city_for_postcode(df, postcode_area):
+    """Get a representative city name for a given postcode area"""
     if 'City' in df.columns and 'Postcode_Area' in df.columns:
-        postcode = df[df['City'] == city_name]['Postcode_Area'].iloc[0]
-        return postcode
+        # Get the most common city name for this postcode area
+        city = df[df['Postcode_Area'] == postcode_area]['City'].mode()
+        if len(city) > 0:
+            return city.iloc[0]
     return None
 
 
 def most_affordable_cities(df):
-    cheapest_city_avg = _calculate_city_average_prices(df)
-    cheapest_city = cheapest_city_avg.idxmin()
-    cheapest_price = cheapest_city_avg[cheapest_city]
+    cheapest_area_avg = _calculate_city_average_prices(df)
+    cheapest_postcode = cheapest_area_avg.idxmin()
+    cheapest_price = cheapest_area_avg[cheapest_postcode]
     
-    # Get postcode area for display
-    postcode_area = _get_postcode_for_city(df, cheapest_city)
-    if postcode_area:
-        print(f" Most affordable area: {cheapest_city} ({postcode_area}) £{cheapest_price:,.0f}")
+    # Get city name for display
+    city_name = _get_city_for_postcode(df, cheapest_postcode)
+    if city_name:
+        print(f" Most affordable area: {city_name} ({cheapest_postcode}) £{cheapest_price:,.0f}")
     else:
-        print(f" Most affordable area: {cheapest_city} £{cheapest_price:,.0f}")
+        print(f" Most affordable area: {cheapest_postcode} £{cheapest_price:,.0f}")
     return 
 
 def highest_value_cities(df):
-    highest_city_avg = _calculate_city_average_prices(df)
-    highest_city = highest_city_avg.idxmax()
-    highest_price = highest_city_avg[highest_city]
+    highest_area_avg = _calculate_city_average_prices(df)
+    highest_postcode = highest_area_avg.idxmax()
+    highest_price = highest_area_avg[highest_postcode]
     
-    # Get postcode area for display
-    postcode_area = _get_postcode_for_city(df, highest_city)
-    if postcode_area:
-        print(f" Highest value area: {highest_city} ({postcode_area}) £{highest_price:,.0f}")
+    # Get city name for display
+    city_name = _get_city_for_postcode(df, highest_postcode)
+    if city_name:
+        print(f" Highest value area: {city_name} ({highest_postcode}) £{highest_price:,.0f}")
     else:
-        print(f" Highest value area: {highest_city} £{highest_price:,.0f}")
+        print(f" Highest value area: {highest_postcode} £{highest_price:,.0f}")
     return 
 
 def city_inventory_analysis(df):
-    # Use City column if available, otherwise fall back to Postcode_Area
-    if 'City' in df.columns:
-        inventory_counts = df.groupby('City').size()
-        location_type = "City"
-    else:
-        inventory_counts = df.groupby('Postcode_Area').size()
-        location_type = "Area"
+    # Always group by Postcode_Area for consistent analysis
+    inventory_counts = df.groupby('Postcode_Area').size()
+    location_type = "Area"
     
-    most_inventory_area = inventory_counts.idxmax()
+    most_inventory_postcode = inventory_counts.idxmax()
     most_inventory_count = inventory_counts.max()
     
-    # Find all locations with minimum count
+    # Find all postcode areas with minimum count
     least_inventory_count = inventory_counts.min()
-    least_inventory_areas = inventory_counts[inventory_counts == least_inventory_count].index.tolist()
+    least_inventory_postcodes = inventory_counts[inventory_counts == least_inventory_count].index.tolist()
     
     # Format display for most choices
-    postcode_area = _get_postcode_for_city(df, most_inventory_area)
-    if postcode_area:
-        print(f"{location_type} with most choices: {most_inventory_area} ({postcode_area}) ({most_inventory_count} properties)")
+    city_name = _get_city_for_postcode(df, most_inventory_postcode)
+    if city_name:
+        print(f"{location_type} with most choices: {city_name} ({most_inventory_postcode}) ({most_inventory_count} properties)")
     else:
-        print(f"{location_type} with most choices: {most_inventory_area} ({most_inventory_count} properties)")
+        print(f"{location_type} with most choices: {most_inventory_postcode} ({most_inventory_count} properties)")
     
     # Format display for least choices
-    if len(least_inventory_areas) == 1:
-        postcode_area = _get_postcode_for_city(df, least_inventory_areas[0])
-        if postcode_area:
-            print(f"{location_type} with least choices: {least_inventory_areas[0]} ({postcode_area}) ({least_inventory_count} properties)")
+    if len(least_inventory_postcodes) == 1:
+        city_name = _get_city_for_postcode(df, least_inventory_postcodes[0])
+        if city_name:
+            print(f"{location_type} with least choices: {city_name} ({least_inventory_postcodes[0]}) ({least_inventory_count} properties)")
         else:
-            print(f"{location_type} with least choices: {least_inventory_areas[0]} ({least_inventory_count} properties)")
+            print(f"{location_type} with least choices: {least_inventory_postcodes[0]} ({least_inventory_count} properties)")
     else:
-        # Show first few with postcode areas
+        # Show first few with city names
         formatted_areas = []
-        for area in least_inventory_areas[:3]:  # Show first 3
-            postcode_area = _get_postcode_for_city(df, area)
-            if postcode_area:
-                formatted_areas.append(f"{area} ({postcode_area})")
+        for postcode in least_inventory_postcodes[:3]:  # Show first 3
+            city_name = _get_city_for_postcode(df, postcode)
+            if city_name:
+                formatted_areas.append(f"{city_name} ({postcode})")
             else:
-                formatted_areas.append(str(area))
+                formatted_areas.append(str(postcode))
         
         areas_str = ", ".join(formatted_areas)
-        if len(least_inventory_areas) > 3:
-            areas_str += f" and {len(least_inventory_areas) - 3} others"
+        if len(least_inventory_postcodes) > 3:
+            areas_str += f" and {len(least_inventory_postcodes) - 3} others"
         print(f"{location_type}s with least choices: {areas_str} ({least_inventory_count} properties each)")
     
     return 
@@ -96,4 +91,11 @@ def price_comparison_by_new_built_status(df):
     existing_built_avg_prices = df[df['New_built_indicator'] == 'N']['Price'].mean()
     print(f"Average price of new builds: £{new_built_avg_prices:,.0f}")
     print(f"Average price of existing properties: £{existing_built_avg_prices:,.0f}")
+    return
+
+def price_comparison_by_tenure_type(df):
+    freehold_avg_prices = df[df['Tenure_Type'] == 'F']['Price'].mean()
+    leasehold_avg_prices = df[df['Tenure_Type'] == 'L']['Price'].mean()
+    print(f"Average price of freehold properties: £{freehold_avg_prices:,.0f}")
+    print(f"Average price of leasehold properties: £{leasehold_avg_prices:,.0f}")
     return

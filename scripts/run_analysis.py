@@ -32,6 +32,7 @@ def main():
         highest_value_cities(df)
         city_inventory_analysis(df)
         price_comparison_by_new_built_status(df)
+        price_comparison_by_tenure_type(df)
     except FileNotFoundError as e:
         print(f" Error: {e}")
         print(" Use the helper scripts:")
