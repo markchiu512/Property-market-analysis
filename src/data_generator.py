@@ -1,32 +1,32 @@
 import pandas as pd
 import numpy as np
 
+
 def generate_property_data():
 
     properties = []
 
-    date_range = pd.date_range(start='2024-01-01', end='2024-12-31', freq="D").strftime('%Y-%m-%d')
+    date_range = pd.date_range(start='2024-01-01', end='2024-12-31',
+                               freq="D").strftime('%Y-%m-%d')
 
     for i in range(1000):
-        
-    
+
         random_price = np.random.randint(100000, 2000000)
 
-        
         random_date = np.random.choice(date_range)
 
         postcode = ['AB', 'AL', 'B', 'BA', 'BB', 'BD', 'BH', 'BL', 'BN', 'BR',
-                    'BS', 'BT', 'CA', 'CB', 'CF', 'CH', 'CM', 'CO', 'CR', 'CT', 
-                    'CV', 'CW', 'DA', 'DD', 'DE', 'DG', 'DH', 'DL', 'DN', 'DT', 
-                    'DY', 'E', 'EC', 'EH', 'EN', 'EX', 'FK', 'FY', 'G', 'GL', 
-                    'GU', 'GY', 'HA', 'HD', 'HG', 'HP', 'HR', 'HS', 'HU', 'HX', 
-                    'IG', 'IM', 'IP', 'IV', 'JE', 'KA', 'KT', 'KW', 'KY', 'L', 
-                    'LA', 'LD', 'LE', 'LL', 'LN', 'LS', 'LU', 'M', 'ME', 'MK', 
-                    'ML', 'N', 'NE', 'NG', 'NN', 'NP', 'NR', 'NW', 'OL', 'OX', 
-                    'PA', 'PE', 'PH', 'PL', 'PO', 'PR', 'RG', 'RH', 'RM', 'S', 
-                    'SA', 'SE', 'SG', 'SK', 'SL', 'SM', 'SN', 'SO', 'SP', 'SR', 
-                    'SS', 'ST', 'SW', 'SY', 'TA', 'TD', 'TF', 'TN', 'TQ', 'TR', 
-                    'TS', 'TW', 'UB', 'W', 'WA', 'WC', 'WD', 'WF', 'WN', 'WR', 
+                    'BS', 'BT', 'CA', 'CB', 'CF', 'CH', 'CM', 'CO', 'CR', 'CT',
+                    'CV', 'CW', 'DA', 'DD', 'DE', 'DG', 'DH', 'DL', 'DN', 'DT',
+                    'DY', 'E', 'EC', 'EH', 'EN', 'EX', 'FK', 'FY', 'G', 'GL',
+                    'GU', 'GY', 'HA', 'HD', 'HG', 'HP', 'HR', 'HS', 'HU', 'HX',
+                    'IG', 'IM', 'IP', 'IV', 'JE', 'KA', 'KT', 'KW', 'KY', 'L',
+                    'LA', 'LD', 'LE', 'LL', 'LN', 'LS', 'LU', 'M', 'ME', 'MK',
+                    'ML', 'N', 'NE', 'NG', 'NN', 'NP', 'NR', 'NW', 'OL', 'OX',
+                    'PA', 'PE', 'PH', 'PL', 'PO', 'PR', 'RG', 'RH', 'RM', 'S',
+                    'SA', 'SE', 'SG', 'SK', 'SL', 'SM', 'SN', 'SO', 'SP', 'SR',
+                    'SS', 'ST', 'SW', 'SY', 'TA', 'TD', 'TF', 'TN', 'TQ', 'TR',
+                    'TS', 'TW', 'UB', 'W', 'WA', 'WC', 'WD', 'WF', 'WN', 'WR',
                     'WS', 'WV', 'YO', 'ZE']
         random_postcode = np.random.choice(postcode)
 
@@ -36,44 +36,44 @@ def generate_property_data():
         new_built_types = ['Y', 'N']
         random_new_built = np.random.choice(new_built_types)
 
-
         tenure_types = ['F', 'L']
         random_tenure_type = np.random.choice(tenure_types)
 
-
-
-
         property_data = [
-            int(random_price), 
+            int(random_price),
             str(random_date),
-            str(random_postcode), 
+            str(random_postcode),
             str(random_property_type),
             str(random_new_built),
             str(random_tenure_type)]
-        
+
         properties.append(property_data)
 
-        
-    columns = ['Price', 'Date', 'Postcode', 'Property Type', 'New built indicator', 'Tenure Type']
+    columns = ['Price', 'Date', 'Postcode', 'Property Type',
+               'New built indicator', 'Tenure Type']
     df = pd.DataFrame(properties, columns=columns)
-    
+
     # Create Postcode_Area column (same logic as real data cleaning)
     df['Postcode_Area'] = np.where(
-        df['Postcode'].str[1].str.isdigit(),  
-        df['Postcode'].str[0],               
+        df['Postcode'].str[1].str.isdigit(),
+        df['Postcode'].str[0],
         df['Postcode'].str[:2])
-    
+
     # Reorder columns to match real data
-    df = df[['Price', 'Date', 'Postcode', 'Property Type', 'New built indicator', 'Tenure Type', 'Postcode_Area']]
+    df = df[['Price', 'Date', 'Postcode', 'Property Type',
+             'New built indicator', 'Tenure Type', 'Postcode_Area']]
 
     import os
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(script_dir)
-    csv_path = os.path.join(project_root, 'data', 'processed', 'property_data_synthetic.csv')
+    csv_path = os.path.join(project_root, 'data', 'processed',
+                            'property_data_synthetic.csv')
     df.to_csv(csv_path, index=False)
-    print(f"Generated {len(df)} synthetic properties and saved to property_data_synthetic.csv")
+    print(f"Generated {len(df)} synthetic properties and saved to "
+          f"property_data_synthetic.csv")
     print("\nSample data:")
     print(df.head())
+
 
 if __name__ == "__main__":
     df = generate_property_data()
