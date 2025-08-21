@@ -5,6 +5,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from data_cleaning import load_data
 from analysis import *
+from visualizations import *   
 
 def main():
     import sys
@@ -33,6 +34,9 @@ def main():
         city_inventory_analysis(df)
         price_comparison_by_new_built_status(df)
         price_comparison_by_tenure_type(df)
+        plot_price_by_postcode(df)
+        plot_property_type_distribution(df)
+
     except FileNotFoundError as e:
         print(f" Error: {e}")
         print(" Use the helper scripts:")
