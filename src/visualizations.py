@@ -111,7 +111,7 @@ def plot_london_price_by_property_type(df):
     property_col = 'Property_Type' if 'Property_Type' in df.columns else 'Property Type'
     avg_prices = df.groupby(property_col)['Price'].mean().sort_values(ascending=False)
     
-    # Map to meaningful names
+    # Map to full names
     labels = [property_type_mapping.get(code, f'Unknown ({code})') for code in avg_prices.index]
     
     # Create the plot
