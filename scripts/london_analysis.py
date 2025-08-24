@@ -5,7 +5,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from data_cleaning import load_data
 from data_filters import filter_london_properties, get_london_property_stats
-from visualizations import plot_london_price_by_property_type, plot_london_postcode_prices
+from visualizations import plot_london_price_by_property_type, plot_london_postcode_prices, load_multi_year_data
 from analysis import *
 
 
@@ -22,8 +22,8 @@ def main():
             return
     
     try:
-        # Load data and filter to London only
-        df = load_data(dataset)
+        # Load multi-year data (2022-2024) and filter to London only
+        df = load_multi_year_data()
         london_df = filter_london_properties(df)
         
         if len(london_df) == 0:

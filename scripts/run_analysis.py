@@ -27,7 +27,8 @@ def main():
             return
     
     try:
-        df = load_data(dataset)
+        # Use multi-year data (2022-2024) instead of single year
+        df = load_multi_year_data()
         print()
         most_affordable_cities(df)
         highest_value_cities(df)

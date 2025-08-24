@@ -32,7 +32,7 @@ def main():
         print(f"  Average price: £{london_ts.mean():,.0f}")
         
         # Based on ACF/PACF analysis, try different parameter combinations
-        # These are examples for weekly data - you should choose based on the ACF/PACF plots
+        # These are examples for weekly data - choose based on the ACF/PACF plots
         models_to_try = [
             ((1, 1, 1), (0, 1, 1, 52)),  # Basic SARIMA with 52-week seasonality
             ((1, 1, 0), (0, 1, 1, 52)),  # AR only

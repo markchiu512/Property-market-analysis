@@ -78,6 +78,7 @@ def load_data(dataset='auto'):
 
 
 def clean_pp_data():
+    """Clean single year (2024) data - kept for backwards compatibility"""
     import os
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(script_dir)
@@ -113,3 +114,63 @@ def clean_pp_data():
     print(f"Created sample with {len(sample_df)} records for demo purposes")
 
     return df_clean
+
+
+def clean_multi_year_data():
+    """Clean and process multi-year property data (2022-2024)"""
+    import os
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(script_dir)
+    
+    all_data = []
+    years = ['2022', '2023', '2024']
+    
+    for year in years:
+        raw_path = os.path.join(project_root, 'data', 'raw', f'pp-{year}.csv')
+        print(f"Loading {year} data...")
+        
+        if os.path.exists(raw_path):
+            # Load and clean data
+            df = pd.read_csv(raw_path, header=None)
+            df_clean = df[[1, 2, 3, 4, 5, 6, 11]].copy()
+            df_clean.columns = ['Price', 'Date', 'Postcode', 'Property_Type', 
+                               'New_built_indicator', 'Tenure_Type', 'City']
+            
+            # Clean date format
+            df_clean['Date'] = df_clean['Date'].str.split(' ').str[0]
+            df_clean['Date'] = pd.to_datetime(df_clean['Date'])
+            
+            # Create Postcode_Area
+            df_clean['Postcode_Area'] = np.where(
+                df_clean['Postcode'].str[1].str.isdigit(),
+                df_clean['Postcode'].str[0],
+                df_clean['Postcode'].str[:2])
+            
+            # Filter out unreasonably low prices
+            df_clean = df_clean[df_clean['Price'] >= 30000]
+            
+            all_data.append(df_clean)
+            print(f"Loaded {len(df_clean)} properties from {year}")
+        else:
+            print(f"Warning: {raw_path} not found")
+    
+    if all_data:
+        combined_df = pd.concat(all_data, ignore_index=True)
+        print(f"Combined total: {len(combined_df)} properties from {len(all_data)} years (2022-2024)")
+        
+        # Save multi-year dataset
+        processed_path = os.path.join(project_root, 'data', 'processed', 'property_data_multi_year.csv')
+        os.makedirs(os.path.dirname(processed_path), exist_ok=True)
+        combined_df.to_csv(processed_path, index=False)
+        print(f"Saved {len(combined_df)} multi-year properties to property_data_multi_year.csv")
+        
+        # Create sample for demo/testing (10000 records from multi-year data)
+        sample_df = combined_df.sample(n=min(10000, len(combined_df)), random_state=42)
+        sample_path = os.path.join(project_root, 'data', 'samples', 'property_data_multi_year_sample.csv')
+        os.makedirs(os.path.dirname(sample_path), exist_ok=True)
+        sample_df.to_csv(sample_path, index=False)
+        print(f"Created multi-year sample with {len(sample_df)} records for demo purposes")
+        
+        return combined_df
+    else:
+        raise FileNotFoundError("No raw data files found")

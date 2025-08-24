@@ -162,12 +162,17 @@ def plot_acf_pacf(ts, lags=None, title="Time Series"):
     axes[0, 1].tick_params(axis='x', rotation=45)
     
     # Adjust lags for differenced series (one less data point)
-    diff_lags = min(lags, len(ts_diff) // 3)
+    diff_lags = min(lags, len(ts_diff) // 4)  # More conservative lag count
+    
+    # Debug info
+    print(f"   Using {diff_lags} lags for {len(ts_diff)} data points")
+    print(f"   Differenced series std: {ts_diff.std():.2f}")
+    print(f"   Differenced series range: {ts_diff.min():.0f} to {ts_diff.max():.0f}")
     
     # ACF plot
     plot_acf(ts_diff, lags=diff_lags, ax=axes[1, 0], title='Autocorrelation Function (ACF)')
     
-    # PACF plot
+    # PACF plot  
     plot_pacf(ts_diff, lags=diff_lags, ax=axes[1, 1], title='Partial Autocorrelation Function (PACF)')
     
     plt.tight_layout()
