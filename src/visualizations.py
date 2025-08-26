@@ -237,3 +237,132 @@ def plot_london_postcode_prices(df):
         plt.show()
     plt.close()  # Close the figure to free memory
 
+
+def plot_london_sales_volume_by_month(df):
+    """Plot monthly sales volume (transaction count) for London properties"""
+    from data_filters import filter_london_properties
+    
+    # Filter to London properties
+    london_df = filter_london_properties(df)
+    
+    # Extract month from Date column
+    london_df['Month'] = london_df['Date'].dt.month
+    london_df['Year'] = london_df['Date'].dt.year
+    
+    # Count transactions by month across all years
+    monthly_counts = london_df.groupby('Month').size()
+    
+    # Month labels
+    month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    
+    # Create the plot
+    plt.figure(figsize=(12, 6))
+    bars = plt.bar(range(1, 13), monthly_counts.values)
+    plt.title('London Property Sales Volume by Month (2022-2024)')
+    plt.xlabel('Month')
+    plt.ylabel('Number of Transactions')
+    plt.xticks(range(1, 13), month_names)
+    
+    # Add value labels on bars
+    for i, bar in enumerate(bars):
+        height = bar.get_height()
+        plt.text(bar.get_x() + bar.get_width()/2, height + height*0.01,
+                f'{int(height):,}', ha='center', va='bottom')
+    
+    # Get the absolute path for saving
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(script_dir)
+    charts_dir = os.path.join(project_root, 'outputs', 'charts')
+    os.makedirs(charts_dir, exist_ok=True)
+    
+    plt.tight_layout()
+    chart_path = os.path.join(charts_dir, 'london_sales_volume_by_month.png')
+    plt.savefig(chart_path, dpi=300, bbox_inches='tight')
+    print(f"Monthly sales volume chart saved to: {chart_path}")
+    
+    # Print summary
+    print(f"\nLondon Sales Volume Summary (2022-2024):")
+    print(f"Total transactions: {london_df.shape[0]:,}")
+    print(f"Highest month: {month_names[monthly_counts.idxmax()-1]} ({monthly_counts.max():,} transactions)")
+    print(f"Lowest month: {month_names[monthly_counts.idxmin()-1]} ({monthly_counts.min():,} transactions)")
+    
+    if matplotlib.get_backend() != 'Agg':
+        plt.show()
+    plt.close()
+
+
+def plot_london_sales_volume_by_year_month(df):
+    """Plot monthly sales volume for London properties, showing each year separately"""
+    from data_filters import filter_london_properties
+    
+    # Filter to London properties
+    london_df = filter_london_properties(df)
+    
+    # Extract month and year from Date column
+    london_df['Month'] = london_df['Date'].dt.month
+    london_df['Year'] = london_df['Date'].dt.year
+    
+    # Count transactions by year and month
+    yearly_monthly_counts = london_df.groupby(['Year', 'Month']).size().unstack(level=0, fill_value=0)
+    
+    # Month labels
+    month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    
+    # Create the plot
+    plt.figure(figsize=(14, 8))
+    
+    # Plot each year as separate bars
+    x = range(1, 13)
+    width = 0.25
+    colors = ['#1f77b4', '#ff7f0e', '#2ca02c']  # Blue, Orange, Green
+    
+    for i, year in enumerate([2022, 2023, 2024]):
+        if year in yearly_monthly_counts.columns:
+            offset = (i - 1) * width
+            bars = plt.bar([pos + offset for pos in x], yearly_monthly_counts[year], 
+                          width=width, label=str(year), color=colors[i], alpha=0.8)
+            
+            # Add value labels on bars (only show if value > 0)
+            for bar in bars:
+                height = bar.get_height()
+                if height > 0:
+                    plt.text(bar.get_x() + bar.get_width()/2, height + height*0.01,
+                            f'{int(height):,}', ha='center', va='bottom', fontsize=8)
+    
+    plt.title('London Property Sales Volume by Month - 3 Year Comparison')
+    plt.xlabel('Month')
+    plt.ylabel('Number of Transactions')
+    plt.xticks(x, month_names)
+    plt.legend()
+    plt.grid(axis='y', alpha=0.3)
+    
+    # Get the absolute path for saving
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(script_dir)
+    charts_dir = os.path.join(project_root, 'outputs', 'charts')
+    os.makedirs(charts_dir, exist_ok=True)
+    
+    plt.tight_layout()
+    chart_path = os.path.join(charts_dir, 'london_sales_volume_by_year_month.png')
+    plt.savefig(chart_path, dpi=300, bbox_inches='tight')
+    print(f"Yearly comparison chart saved to: {chart_path}")
+    
+    # Print summary by year
+    print(f"\nLondon Sales Volume by Year:")
+    total_by_year = london_df.groupby('Year').size()
+    for year in [2022, 2023, 2024]:
+        if year in total_by_year.index:
+            count = total_by_year[year]
+            print(f"  {year}: {count:,} transactions")
+            
+            # Find peak month for this year
+            if year in yearly_monthly_counts.columns:
+                peak_month_num = yearly_monthly_counts[year].idxmax()
+                peak_count = yearly_monthly_counts[year].max()
+                print(f"    Peak month: {month_names[peak_month_num-1]} ({peak_count:,} transactions)")
+    
+    if matplotlib.get_backend() != 'Agg':
+        plt.show()
+    plt.close()

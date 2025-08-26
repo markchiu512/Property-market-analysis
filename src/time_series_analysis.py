@@ -178,9 +178,9 @@ def plot_acf_pacf(ts, lags=None, title="Time Series"):
     plt.tight_layout()
     
     # Save the plot
-    chart_path = os.path.join(charts_dir, f'acf_pacf_analysis_{title.lower().replace(" ", "_")}.png')
+    chart_path = os.path.join(charts_dir, f'acf_pacf_price_analysis_{title.lower().replace(" ", "_")}.png')
     plt.savefig(chart_path, dpi=300, bbox_inches='tight')
-    print(f"ACF/PACF analysis saved to: {chart_path}")
+    print(f"Price ACF/PACF analysis saved to: {chart_path}")
     
     # Only show if running in interactive mode
     if matplotlib.get_backend() != 'Agg':
@@ -321,3 +321,320 @@ def analyze_sarima_parameters(ts, title="London Properties"):
     }
     
     return recommendations
+
+
+def prepare_london_sales_volume_time_series(df, freq='M'):
+    """
+    Prepare London sales volume (transaction count) as time series
+    
+    Args:
+        df: Combined property dataframe
+        freq: Frequency for time series ('M' for monthly, 'W' for weekly)
+    
+    Returns:
+        pd.Series: Time series of London transaction counts
+    """
+    from data_filters import filter_london_properties
+    
+    # Filter to London properties
+    london_df = filter_london_properties(df)
+    
+    # Ensure Date column is datetime
+    london_df['Date'] = pd.to_datetime(london_df['Date'])
+    
+    # Set date as index and count transactions
+    london_df = london_df.set_index('Date')
+    
+    # Resample by frequency and count transactions
+    if freq == 'M':
+        ts = london_df.resample('ME').size()  # Count transactions per month
+        print(f"Created monthly sales volume time series with {len(ts)} data points")
+    elif freq == 'W':
+        ts = london_df.resample('W').size()  # Count transactions per week
+        print(f"Created weekly sales volume time series with {len(ts)} data points")
+    else:
+        raise ValueError("Frequency must be 'M' (monthly) or 'W' (weekly)")
+    
+    # Fill any missing periods with 0 (no transactions)
+    ts = ts.fillna(0)
+    
+    return ts
+
+
+def plot_sales_volume_acf_pacf(ts, lags=None, title="Sales Volume"):
+    """
+    Plot ACF and PACF for sales volume time series
+    
+    Args:
+        ts: Sales volume time series data
+        lags: Number of lags to include
+        title: Title for the plots
+    """
+    # Determine appropriate number of lags - use 52 for weekly data
+    if lags is None:
+        if len(ts) > 100:  # Weekly data
+            lags = min(52, len(ts) // 3)  # Up to 52 weeks for annual patterns
+        else:
+            lags = min(24, len(ts) // 3)
+    
+    # Get the absolute path for saving
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(script_dir)
+    charts_dir = os.path.join(project_root, 'outputs', 'charts')
+    os.makedirs(charts_dir, exist_ok=True)
+    
+    # Create subplots
+    fig, axes = plt.subplots(2, 2, figsize=(15, 10))
+    fig.suptitle(f'Sales Volume ACF and PACF Analysis - {title}', fontsize=16)
+    
+    # Original time series
+    axes[0, 0].plot(ts.index, ts.values)
+    axes[0, 0].set_title('Original Sales Volume Series')
+    axes[0, 0].set_ylabel('Transaction Count')
+    axes[0, 0].tick_params(axis='x', rotation=45)
+    
+    # First difference for stationarity
+    ts_diff = ts.diff().dropna()
+    axes[0, 1].plot(ts_diff.index, ts_diff.values)
+    axes[0, 1].set_title('First Difference')
+    axes[0, 1].set_ylabel('Change in Transaction Count')
+    axes[0, 1].tick_params(axis='x', rotation=45)
+    axes[0, 1].axhline(y=0, color='red', linestyle='--', alpha=0.5)
+    
+    # Adjust lags for differenced series
+    diff_lags = min(lags, len(ts_diff) // 4)
+    
+    # Debug info
+    print(f"   Using {diff_lags} lags for {len(ts_diff)} data points")
+    print(f"   Sales volume std: {ts.std():.2f}")
+    print(f"   Sales volume range: {ts.min():.0f} to {ts.max():.0f} transactions")
+    print(f"   Differenced series std: {ts_diff.std():.2f}")
+    
+    # ACF plot
+    plot_acf(ts_diff, lags=diff_lags, ax=axes[1, 0], title='Autocorrelation Function (ACF)')
+    
+    # PACF plot  
+    plot_pacf(ts_diff, lags=diff_lags, ax=axes[1, 1], title='Partial Autocorrelation Function (PACF)')
+    
+    plt.tight_layout()
+    
+    # Save the plot
+    chart_path = os.path.join(charts_dir, f'acf_pacf_sales_volume_weekly_{title.lower().replace(" ", "_")}.png')
+    plt.savefig(chart_path, dpi=300, bbox_inches='tight')
+    print(f"Weekly sales volume ACF/PACF analysis saved to: {chart_path}")
+    
+    # Only show if running in interactive mode
+    if matplotlib.get_backend() != 'Agg':
+        plt.show()
+    plt.close()
+    
+    return ts_diff
+
+
+def analyze_sales_volume_sarima_parameters(df, title="London Sales Volume"):
+    """
+    Analyze sales volume time series to determine SARIMA parameters
+    
+    Args:
+        df: Combined property dataframe
+        title: Title for analysis
+        
+    Returns:
+        dict: Recommended parameters and analysis results
+    """
+    print(f"\n{'='*60}")
+    print(f"SALES VOLUME SARIMA ANALYSIS - {title.upper()}")
+    print(f"{'='*60}")
+    
+    # Prepare weekly sales volume time series (to match price analysis)
+    ts = prepare_london_sales_volume_time_series(df, freq='W')
+    
+    print(f"Sales volume summary:")
+    print(f"  Period: {ts.index[0].strftime('%Y-%m')} to {ts.index[-1].strftime('%Y-%m')}")
+    print(f"  Data points: {len(ts)}")
+    print(f"  Average weekly transactions: {ts.mean():.1f}")
+    print(f"  Peak week: {ts.max():.0f} transactions")
+    print(f"  Low week: {ts.min():.0f} transactions")
+    
+    # 1. Check stationarity of original series
+    is_stationary = check_stationarity(ts, "Original Sales Volume")
+    
+    # 2. Check stationarity of first difference
+    ts_diff = ts.diff().dropna()
+    is_diff_stationary = check_stationarity(ts_diff, "First Difference Sales Volume")
+    
+    # 3. Generate ACF/PACF plots
+    print(f"\nGenerating sales volume ACF/PACF plots...")
+    ts_diff = plot_sales_volume_acf_pacf(ts, title=title)
+    
+    # 4. Parameter recommendations for sales volume
+    print(f"\n{'='*50}")
+    print("SALES VOLUME SARIMA PARAMETER RECOMMENDATIONS:")
+    print(f"{'='*50}")
+    
+    # Determine d (differencing order)
+    d_param = 1 if not is_stationary and is_diff_stationary else 0
+    
+    print(f"Based on sales volume characteristics:")
+    print(f"  d (differencing order): {d_param}")
+    print(f"  D (seasonal differencing): 1 (for weekly seasonality)")
+    print(f"  s (seasonal period): 52 (weekly data)")
+    
+    print(f"\nSales volume with weekly data:")
+    print(f"  - Look for significant spikes at lags 13, 26, 52 (quarterly/annual patterns)")
+    print(f"  - Weekly count data may show different patterns than monthly")
+    print(f"  - 52-week seasonality captures annual buying cycles")
+    
+    recommendations = {
+        'd': d_param,
+        'D': 1,
+        's': 52,
+        'frequency': 'weekly',
+        'data_type': 'sales_volume',
+        'suggested_ranges': {
+            'p': [0, 1, 2],
+            'q': [0, 1, 2], 
+            'P': [0, 1, 2],  # May need stronger seasonal AR
+            'Q': [0, 1, 2]   # May need stronger seasonal MA
+        }
+    }
+    
+    return recommendations
+
+
+def analyze_sales_volume_sarima_parameters_monthly(df, title="London Sales Volume Monthly"):
+    """
+    Analyze monthly sales volume time series to determine SARIMA parameters (36 data points)
+    
+    Args:
+        df: Combined property dataframe
+        title: Title for analysis
+        
+    Returns:
+        dict: Recommended parameters and analysis results
+    """
+    print(f"\n{'='*60}")
+    print(f"MONTHLY SALES VOLUME SARIMA ANALYSIS - {title.upper()}")
+    print(f"{'='*60}")
+    
+    # Prepare monthly sales volume time series
+    ts = prepare_london_sales_volume_time_series(df, freq='M')
+    
+    print(f"Monthly sales volume summary:")
+    print(f"  Period: {ts.index[0].strftime('%Y-%m')} to {ts.index[-1].strftime('%Y-%m')}")
+    print(f"  Data points: {len(ts)}")
+    print(f"  Average monthly transactions: {ts.mean():.1f}")
+    print(f"  Peak month: {ts.max():.0f} transactions")
+    print(f"  Low month: {ts.min():.0f} transactions")
+    
+    # 1. Check stationarity of original series
+    is_stationary = check_stationarity(ts, "Original Monthly Sales Volume")
+    
+    # 2. Check stationarity of first difference
+    ts_diff = ts.diff().dropna()
+    is_diff_stationary = check_stationarity(ts_diff, "First Difference Monthly Sales Volume")
+    
+    # 3. Generate ACF/PACF plots with monthly-specific parameters
+    print(f"\nGenerating monthly sales volume ACF/PACF plots...")
+    ts_diff = plot_sales_volume_acf_pacf_monthly(ts, title=title)
+    
+    # 4. Parameter recommendations for monthly sales volume
+    print(f"\n{'='*50}")
+    print("MONTHLY SALES VOLUME SARIMA PARAMETER RECOMMENDATIONS:")
+    print(f"{'='*50}")
+    
+    # Determine d (differencing order)
+    d_param = 1 if not is_stationary and is_diff_stationary else 0
+    
+    print(f"Based on monthly sales volume characteristics:")
+    print(f"  d (differencing order): {d_param}")
+    print(f"  D (seasonal differencing): 1 (for monthly seasonality)")
+    print(f"  s (seasonal period): 12 (monthly data)")
+    
+    print(f"\nMonthly sales volume analysis:")
+    print(f"  - Look for significant spikes at lags 12, 24 (annual patterns)")
+    print(f"  - Monthly aggregation smooths weekly variations")
+    print(f"  - Clearer seasonal patterns than weekly data")
+    
+    recommendations = {
+        'd': d_param,
+        'D': 1,
+        's': 12,
+        'frequency': 'monthly',
+        'data_type': 'sales_volume_monthly',
+        'suggested_ranges': {
+            'p': [0, 1, 2],
+            'q': [0, 1, 2], 
+            'P': [0, 1, 2],
+            'Q': [0, 1, 2]
+        }
+    }
+    
+    return recommendations
+
+
+def plot_sales_volume_acf_pacf_monthly(ts, lags=None, title="Monthly Sales Volume"):
+    """
+    Plot ACF and PACF for monthly sales volume time series
+    
+    Args:
+        ts: Sales volume time series data (monthly)
+        lags: Number of lags to include
+        title: Title for the plots
+    """
+    # Determine appropriate number of lags for monthly data
+    if lags is None:
+        lags = min(24, len(ts) // 3)  # Up to 24 months for seasonal patterns
+    
+    # Get the absolute path for saving
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(script_dir)
+    charts_dir = os.path.join(project_root, 'outputs', 'charts')
+    os.makedirs(charts_dir, exist_ok=True)
+    
+    # Create subplots
+    fig, axes = plt.subplots(2, 2, figsize=(15, 10))
+    fig.suptitle(f'Monthly Sales Volume ACF and PACF Analysis - {title}', fontsize=16)
+    
+    # Original time series
+    axes[0, 0].plot(ts.index, ts.values)
+    axes[0, 0].set_title('Original Monthly Sales Volume Series')
+    axes[0, 0].set_ylabel('Monthly Transaction Count')
+    axes[0, 0].tick_params(axis='x', rotation=45)
+    
+    # First difference for stationarity
+    ts_diff = ts.diff().dropna()
+    axes[0, 1].plot(ts_diff.index, ts_diff.values)
+    axes[0, 1].set_title('First Difference')
+    axes[0, 1].set_ylabel('Change in Monthly Transaction Count')
+    axes[0, 1].tick_params(axis='x', rotation=45)
+    axes[0, 1].axhline(y=0, color='red', linestyle='--', alpha=0.5)
+    
+    # Adjust lags for differenced series
+    diff_lags = min(lags, len(ts_diff) // 4)
+    
+    # Debug info
+    print(f"   Using {diff_lags} lags for {len(ts_diff)} monthly data points")
+    print(f"   Monthly sales volume std: {ts.std():.2f}")
+    print(f"   Monthly sales volume range: {ts.min():.0f} to {ts.max():.0f} transactions")
+    print(f"   Differenced series std: {ts_diff.std():.2f}")
+    
+    # ACF plot
+    plot_acf(ts_diff, lags=diff_lags, ax=axes[1, 0], title='Autocorrelation Function (ACF)')
+    
+    # PACF plot  
+    plot_pacf(ts_diff, lags=diff_lags, ax=axes[1, 1], title='Partial Autocorrelation Function (PACF)')
+    
+    plt.tight_layout()
+    
+    # Save the plot with different name
+    chart_path = os.path.join(charts_dir, f'acf_pacf_sales_volume_monthly_{title.lower().replace(" ", "_")}.png')
+    plt.savefig(chart_path, dpi=300, bbox_inches='tight')
+    print(f"Monthly sales volume ACF/PACF analysis saved to: {chart_path}")
+    
+    # Only show if running in interactive mode
+    if matplotlib.get_backend() != 'Agg':
+        plt.show()
+    plt.close()
+    
+    return ts_diff

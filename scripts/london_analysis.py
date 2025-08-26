@@ -5,7 +5,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from data_cleaning import load_data
 from data_filters import filter_london_properties, get_london_property_stats
-from visualizations import plot_london_price_by_property_type, plot_london_postcode_prices, load_multi_year_data
+from visualizations import plot_london_price_by_property_type, plot_london_postcode_prices, load_multi_year_data, plot_london_sales_volume_by_month, plot_london_sales_volume_by_year_month
+from time_series_analysis import analyze_sales_volume_sarima_parameters, analyze_sales_volume_sarima_parameters_monthly
 from analysis import *
 
 
@@ -57,6 +58,20 @@ def main():
         # Generate London-specific visualizations
         plot_london_price_by_property_type(london_df)
         plot_london_postcode_prices(london_df)
+        
+        # Generate sales volume seasonality charts
+        print("\n=== SALES VOLUME SEASONALITY ===")
+        # plot_london_sales_volume_by_month(df)  # Combined 3-year view
+        plot_london_sales_volume_by_year_month(df)  # Year-by-year comparison
+        
+        # Generate sales volume ACF/PACF analysis
+        print("\n=== SALES VOLUME ACF/PACF ANALYSIS ===")
+        
+        # Monthly analysis (36 data points, up to 12 lags) 
+        analyze_sales_volume_sarima_parameters_monthly(df)
+
+        # Weekly analysis (156 data points, up to 52 lags)
+        analyze_sales_volume_sarima_parameters(df)
         
         print("\nLondon analysis complete! Check outputs/charts/ for visualizations.")
         
