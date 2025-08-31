@@ -42,6 +42,21 @@ def main():
         print(f"Price range: £{stats['min_price']:,.0f} - £{stats['max_price']:,.0f}")
         print(f"Number of postcode areas: {stats['postcode_areas']}")
         
+        # Generate sales volume seasonality charts
+        print("\n=== SALES VOLUME SEASONALITY ===")
+        # plot_london_sales_volume_by_month(df)  # Combined 3-year view
+        plot_london_sales_volume_by_year_month(df)  # Year-by-year comparison
+        
+        # Generate sales volume ACF/PACF analysis
+        print("\n=== SALES VOLUME ACF/PACF ANALYSIS ===")
+        
+        # Monthly analysis (36 data points, up to 12 lags) 
+        analyze_sales_volume_sarima_parameters_monthly(df)
+
+        # Weekly analysis (156 data points, up to 52 lags)
+        analyze_sales_volume_sarima_parameters(df)
+        
+
         print("\n=== AVERAGE PRICES BY PROPERTY TYPE ===")
         for prop_type, avg_price in stats['avg_price_by_type'].items():
             type_names = {'D': 'Detached', 'S': 'Semi-detached', 'F': 'Flat/Apartment', 'T': 'Terraced', 'O': 'Other'}
@@ -59,20 +74,7 @@ def main():
         plot_london_price_by_property_type(london_df)
         plot_london_postcode_prices(london_df)
         
-        # Generate sales volume seasonality charts
-        print("\n=== SALES VOLUME SEASONALITY ===")
-        # plot_london_sales_volume_by_month(df)  # Combined 3-year view
-        plot_london_sales_volume_by_year_month(df)  # Year-by-year comparison
-        
-        # Generate sales volume ACF/PACF analysis
-        print("\n=== SALES VOLUME ACF/PACF ANALYSIS ===")
-        
-        # Monthly analysis (36 data points, up to 12 lags) 
-        analyze_sales_volume_sarima_parameters_monthly(df)
-
-        # Weekly analysis (156 data points, up to 52 lags)
-        analyze_sales_volume_sarima_parameters(df)
-        
+ 
         print("\nLondon analysis complete! Check outputs/charts/ for visualizations.")
         
     except FileNotFoundError as e:
